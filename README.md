@@ -20,7 +20,7 @@ appdynamics {
   <a href="#password">password</a> => ... # string (required)
   <a href="#dataSelectors">dataSelectors</a> => ... # hash (required)
   <a href="start_time">start_time</a> => ... # string (optional), default: current time is used
-  <a href="end_time">start_time</a> => ... # string (optional), default: none
+  <a href="end_time">end_time</a> => ... # string (optional), default: none
   <a href="latency">latency</a> => ... # number (optional), default: 0 minutes
   <a href="aggregation_interval">aggregation_interval</a> => ... # number (optional), default: 15 minutes
   <a href="SCAWindowMarker">SCAWindowMarker</a> => ... # boolean (optional), default: false
@@ -31,14 +31,14 @@ appdynamics {
 Connects to Wily Instroscope Web Services interfaces, specified in the user supplied WSDL file. Uses the user supplied data selectors and time specifications to extract metric data from the Web Services interface. Some basic processing of the returned SOAP data is carried out and simple Logstash events are created and output. This plugin will be of particular use with IBM Predictive Insights
 <h4>
 <a name="wsdl">
-user
+wsdl
 </a>
 </h4>
 <ul>
 <li> Value type is <a href="https://www.elastic.co/guide/en/logstash/current/configuration-file-structure.html#string">String</a> </li>
 <li> There is no default value for this setting </li>
 </ul>
-<p>Specify the path to the WSDL file for this environment. This plugin has been tested with 'MetricsDataService.xml' (Built on Apr 22, 2006)  from Wily. Note: This file must be provided by the user. The local instance of this file must be edited to provide the wsdlsoap:address locaction information. For example, find the entry in the file corresponding to wsdlsoap:address location=   and change it appropriately for your environment. Usually, this is simply a matter of changing the host/port information.
+<p>Specify the path to the WSDL file for this environment. This plugin has been tested with 'MetricsDataService.xml' (Built on Apr 22, 2006)  from Wily. Note: This file must be provided by the user. The local instance of this file must be edited to provide the wsdlsoap:address location information. For example, find the entry in the file corresponding to wsdlsoap:address location=   and change it appropriately for your environment. Usually, this is simply a matter of changing the host/port information in your local MetricsDataService.xml file.
 </p>
 <h4>
 <a name="username">
@@ -66,6 +66,7 @@ Password to connect to Introscope
 </p>
 <h4>
 <a name="dataSelectors">
+dataSelectors
 </a>
 </h4>
 <ul>
@@ -78,11 +79,12 @@ These are the metric selector specification, used when invoking the WebService i
 <code>https://docs.appdynamics.com/display/PRO14S/Use+the+AppDynamics+REST+API as guidance</code>
 <p>Example entries</p>
 <pre><code>
- metricURIs => {
-    "GroupTest" => ["applications/PNSE/metric-data?metric-path=Overall Application Performance|D84-Portal|*"]
-    "GroupBusinessTransactions" => [
-             "applications/CN/metric-data?metric-path=Business Transaction Performance|Business Transactions|Portal|Entry|Individual Nodes|*|*",
-             "applications/CN/metric-data?metric-path=Business Transaction Performance|Business Transactions|Portal|Exit|Individual Nodes|*|*" ]
+ dataSelectors => {
+    "GroupA"   => ["agentRegex,metricRegex,300"]
+    "WWW"      => [ "hostABC,Frontends\|Apps\|WebSphere Portal Server:Response Per Interval,300",
+                    "myhosts(10|11|12).*,CPU:Utilization \% \(process\),300" ]
+    "Garbage"  => [ "serverX ,GC Heap:Bytes In Use,300"]
+            }
 </code></pre>
 </p>
 <h4>
