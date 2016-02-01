@@ -19,11 +19,11 @@ appdynamics {
   <a href="#username">username</a> => ... # string (required)
   <a href="#password">password</a> => ... # string (required)
   <a href="#dataSelectors">dataSelectors</a> => ... # hash (required)
-  <a href="start_time">start_time</a> => ... # string (optional), default: current time is used
-  <a href="end_time">end_time</a> => ... # string (optional), default: none
-  <a href="latency">latency</a> => ... # number (optional), default: 0 minutes
-  <a href="aggregation_interval">aggregation_interval</a> => ... # number (optional), default: 15 minutes
-  <a href="SCAWindowMarker">SCAWindowMarker</a> => ... # boolean (optional), default: false
+  <a href="#start_time">start_time</a> => ... # string (optional), default: current time is used
+  <a href="#end_time">end_time</a> => ... # string (optional), default: none
+  <a href="#latency">latency</a> => ... # number (optional), default: 0 minutes
+  <a href="#aggregation_interval">aggregation_interval</a> => ... # number (optional), default: 15 minutes
+  <a href="#SCAWindowMarker">SCAWindowMarker</a> => ... # boolean (optional), default: false
   }
 }
 </code></pre>
