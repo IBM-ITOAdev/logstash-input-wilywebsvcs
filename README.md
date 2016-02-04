@@ -76,7 +76,7 @@ dataSelectors
 <p>
 These are the metric selector specification, used when invoking the WebService interface. Each one of the supplied rows will form the basis for selecting metrics in a SOAP request. They are arranged as groups, and within each group, sets of agent regex, metric regex and data frequency specifications. Please see your Wily Introscope MetricDataService documentation for details on allowable syntax and expected semantics. The output data will have a group attribute and value associated with it, to allow you to relate it to the individual dataSelector entry that was responsible for its creation.
 <p>Use
-<code>https://docs.appdynamics.com/display/PRO14S/Use+the+AppDynamics+REST+API as guidance</code>
+<a href="https://docs.appdynamics.com/display/PRO14S/Use+the+AppDynamics+REST+API">Wily data selectors</a>as guidance
 <p>Example entries</p>
 <pre><code>
  dataSelectors => {
