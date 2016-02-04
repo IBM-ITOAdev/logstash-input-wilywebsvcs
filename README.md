@@ -13,7 +13,7 @@
 <h2>wilywebsvcs</h2>
 <h3> Synopsis </h3>
 Connects to Wily Introscope Web Services interface, extracts metrics on a specified schedule, using a set of supplied metric selectors
-<pre><code>output {
+<pre><code>input {
 wilywebsvcs {
   <a href="#wsdl">wsdl</a> => ... # string (required)
   <a href="#username">username</a> => ... # string (required)
