@@ -28,7 +28,7 @@ wilywebsvcs {
 }
 </code></pre>
 <h3> Details </h3>
-Connects to Wily Instroscope Web Services interfaces, specified in the user supplied WSDL file. Uses the user supplied data selectors and time specifications to extract metric data from the Web Services interface. Some basic processing of the returned SOAP data is carried out and simple Logstash events are created and output. This plugin will be of particular use with IBM Predictive Insights
+Connects to Wily Introscope Web Services interfaces, specified in the user supplied WSDL file. Uses the user supplied data selectors and time specifications to extract metric data from the Web Services interface. Some basic processing of the returned SOAP data is carried out and simple Logstash events are created and output. This plugin will be of particular use with IBM Predictive Insights
 <h4>
 <a name="wsdl">
 wsdl
