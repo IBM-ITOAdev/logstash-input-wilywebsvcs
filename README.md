@@ -116,7 +116,7 @@ end_time (optional setting)
 The plugin will stop collecting from the specified time.  If end_time is not provided, the plugin will continue to collect data, moving forward, limited only by wallclock time ( it won't go past current time) and the configured latency setting
 
    # times format is  ISO8601 e.g.
-<code>start_time => "2015-08-22T14:32:00+0000"</code>
+<code>end_time => "2015-08-22T14:32:00+0000"</code>
 </p>
 <h4>
 <a name="latency">
