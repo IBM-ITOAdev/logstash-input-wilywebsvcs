@@ -12,6 +12,7 @@ require 'logstash/namespace'
 
 require 'java' # for the java data format stuff
 require 'savon'
+require 'yaml'
 
 class LogStash::Inputs::WilyWebSvcs < LogStash::Inputs::Base
   config_name "wilywebsvcs"
@@ -28,21 +29,57 @@ class LogStash::Inputs::WilyWebSvcs < LogStash::Inputs::Base
   config :end_time,   :validate => :string, :default => ""
   config :latency,    :validate => :number, :default => 0 # minutes
   config :aggregation_interval, :validate => :number, :default => 15 # minutes
+  
+  # The state preservation behaviour follows that of the jdbc input plugin
+  # See https://www.elastic.co/guide/en/logstash/current/plugins-inputs-jdbc.html
 
-  config :PStoreFile, :validate => :string, :required => false, :default => ""
+  # whether the previous run state should be preserved - true = delete previous state
+  config :clean_run, :validate => :boolean, :default => false
+
+  # Whether to save state or not in last_run_metatdata_path
+  config :record_last_run, :validate => :boolean, :default => true
+
+  # Whether to save satte or not in last_run_metadata_path
+  config :last_run_metadata_path, :validate => :string, :default => "#{ENV['HOME']}/.logstash_wilywebsvcs_last_run"
 
   config :sleep_interval, :validate => :number, :default => 10 # seconds
-  config :SCAWindowMarker, :validate => :boolean, :default => false
   config :logSOAPResponse, :validate => :boolean, :default => false
 
   public
   def register 
 
+    @df = java.text.SimpleDateFormat.new("yyyy-MM-dd'T'HH:mm:ssZ") # format corresponds to PI mediation format
+    @wilyDF = java.text.SimpleDateFormat.new("yyyy-MM-dd'T'HH:mm:ssX")
+    @wilyDF.setTimeZone(java.util.TimeZone.getTimeZone("GMT"))
+
+    @startTime = 0
+    @endTime   = 0
+
+    # Establish start time, using configured @start_time if present, and defaulting to current time, if it is not
+    if @start_time != "" then
+        @startTime = @df.parse(@start_time)
+        @logger.debug("Setting start time from .conf as " + @df.format(@startTime))
+    else
+        @startTime = java.util.Date.new
+        @logger.debug("Setting start time as current time " + @df.format(@startTime))
+    end    
+
+    # load last time from file if exists and use that as the current startTime
+    if @clean_run && File.exist?(@last_run_metadata_path)
+      File.delete(@last_run_metadata_path)
+    elsif File.exist?(@last_run_metadata_path)
+      @startTime = @df.parse(YAML.load(File.read(@last_run_metadata_path)))
+      @logger.debug("Using startTime from store " + @last_run_metadata_path + " " + @df.format(@startTime))
+    end
+
+    if @end_time != "" then
+       @endTime = @df.parse(@end_time)
+    end
+
     @client = Savon.client(wsdl: @wsdl,convert_request_keys_to: :none,
                                     basic_auth:[username,password],
                                     log: @logSOAPResponse, pretty_print_xml: true)
     @logger.debug("Savon client created from wsdl ")
-
   end
  
   private
@@ -145,7 +182,7 @@ class LogStash::Inputs::WilyWebSvcs < LogStash::Inputs::Base
     @logger.debug("dataSelectors = " + dataSelectors.to_s)
 
     bufferedEvents = []
-      
+
     dataSelectors.each do | group, selectorArray |  
       selectorArray.each do | selectorOriginal |
         @logger.debug("selectorOriginal = " + selectorOriginal)
@@ -173,6 +210,8 @@ class LogStash::Inputs::WilyWebSvcs < LogStash::Inputs::Base
           :startTime     => startTime, #"2015-12-08T00:00:00Z"
           :endTime       => endTime # "2015-12-08T01:00:00Z"
                                })
+
+        @logger.debug("response = " + response.to_s)
         
         refs    = decodeRefs(response.body)
         unless refs.empty? then   # only enter this block if we have some data
@@ -181,6 +220,7 @@ class LogStash::Inputs::WilyWebSvcs < LogStash::Inputs::Base
             metrics = decodeMetricData(response.body)          
             agents  = decodeAgentData(response.body)
           rescue Exception => e
+            # Capture the returned structure so we can analyze offline
             @logger.error("Exception decoding metrics or agent data ", :exception => e)
             marshallOut(response.body,"responseBody.dmp")
             puts("response = " + response.to_xml.to_s)
@@ -232,51 +272,20 @@ class LogStash::Inputs::WilyWebSvcs < LogStash::Inputs::Base
 
     timeIncrement = @aggregation_interval * 60000 # convert supplied minutes to milliseconds
 
-    df = java.text.SimpleDateFormat.new("yyyy-MM-dd'T'HH:mm:ssZ") # format corresponds to PI mediation format
-    wilyDF = java.text.SimpleDateFormat.new("yyyy-MM-dd'T'HH:mm:ssX")
-    wilyDF.setTimeZone(java.util.TimeZone.getTimeZone("GMT"))
 
-    endTime   = df.parse("2100-01-01T00:00:00-0000") # long time in the future. Only used if user didn't specify end time so we can run 'forever'
+    @endTime   = @df.parse("2100-01-01T00:00:00-0000") # long time in the future. Only used if user didn't specify end time so we can run 'forever'
 
     latencySec = latency * 60 
 
-    # Establish start time, using configured @start_time if present, and defaulting to current time, if it is not
-    if @start_time != "" then
-        startTime = df.parse(@start_time)
-        puts("Setting start time from .conf as " + startTime.to_s )
-    else
-        startTime = java.util.Date.new
-        puts("Setting start time as current time " + startTime.to_s )
-    end    
-
-    puts("Start time = " + startTime.to_s)
-
-    # startTime can be overridden by a configured PStore file
-
-    # Initialize the PStore if necessary
-    if !@PStoreFile.eql?("")
-      # Actual PStoreFile defined
-      if !File.exist?(@PStoreFile)
-        # but one doesn't exit, prepare the store where we'll track most recent timestamp
-        store = PStore.new(@PStoreFile)
-      else
-        # store file does exist, so read start time from that, and if we can't read it, use the prepared startTime from above
-        startTime = store.transaction { store.fetch(:targetTime, startTime ) }  
-      end
-    end
-
-    if @end_time != "" then
-       endTime = df.parse(@end_time)
-    end
-
     # start from the specified startTime
-    targetTime = startTime
+    targetTime = @startTime
 
     begin
 
+      @logger.debug("targetTime = " + @df.format(targetTime))
       if ( targetTime < (Time.now() - latencySec) ) 
 
-        bufferedEvents = extractDataForTimestamp(targetTime, timeIncrement, @dataSelectors, df,wilyDF)
+        bufferedEvents = extractDataForTimestamp(targetTime, timeIncrement, @dataSelectors, @df,@wilyDF)
 
         # Sort if necessary
         bufferedEvents.sort! { |a,b| a['timeslice_start_time'] <=> b['timeslice_start_time'] }
@@ -286,30 +295,28 @@ class LogStash::Inputs::WilyWebSvcs < LogStash::Inputs::Base
           queue << e
         end
 
-        # if we are configured to output the window marker punctuations, do it now
-        # but only if there are some metric values
-        if (@SCAWindowMarker and (bufferedEvents.length > 0)) 
-          event = LogStash::Event.new("SCAWindowMarker" => true)
-          decorate(event)
-          queue << event
-        end
         bufferedEvents.clear
 
         # move to next time interval
         targetTime.setTime(targetTime.getTime() + timeIncrement)
-        if !@PStoreFile.eql?("")
-puts("Writing targetTime of " + targetTime.to_s + " to store ")
-          store.transaction do store[:targetTime] = targetTime end
-        end
+
+        updateStateFile(@df, targetTime)
 
       else
         # wait a bit before trying again
         sleep(@sleep_interval)
       end
 
-    end until(targetTime.getTime() >= endTime.getTime())
+    end until(targetTime.getTime() >= @endTime.getTime())
 
     #finished
+  end
+
+  def updateStateFile(df, targetTime)
+    if @record_last_run
+      @logger.debug( "Updating statefile " + @last_run_metadata_path + " with " + df.format(targetTime))
+      File.write(@last_run_metadata_path, YAML.dump(df.format(targetTime)))
+    end
   end
 
   public
