@@ -23,7 +23,6 @@ wilywebsvcs {
   <a href="#end_time">end_time</a> => ... # string (optional), default: none
   <a href="#latency">latency</a> => ... # number (optional), default: 0 minutes
   <a href="#aggregation_interval">aggregation_interval</a> => ... # number (optional), default: 15 minutes
-  <a href="#SCAWindowMarker">SCAWindowMarker</a> => ... # boolean (optional), default: false
   }
 }
 </code></pre>
@@ -145,17 +144,46 @@ As the plugin moves through time, it moves forward with this interval. E.g. if i
 </p>
 
 <h4>
-<a name="SCAWindowMarker">
-SCAWindowMarker (optional setting)
+<a name="last_run_metadata_path">
+last_run_metadata_path (optional setting)
+</a>
+</h4>
+<ul>
+<li> Value type is <a href="https://www.elastic.co/guide/en/logstash/current/configuration-file-structure.html#string">string</a></li>
+<li> Default $USER_HOME/.logstash_jdbc_last_run </li>
+</ul>
+<p>
+Path to file where last data time extracted is recorded. The timestamp in this file enables continuation at the appropriate data time following a restart of the plugin/Logstash
+</p>
+
+<a name="record_last_run">
+record_last_run (optional setting)
+</a>
+</h4>
+<ul>
+<li> Value type is <a href="https://www.elastic.co/guide/en/logstash/current/configuration-file-structure.html#string">string</a></li>
+<li> Default: true </li>
+</ul>
+<p>
+Indicates whether the timestamp of the last data extraction should be recorded in the state file (at last_run_metadata_path) or not.
+</p>
+
+
+<h4>
+<a name="clean_run">
+clean_run (optional setting)
 </a>
 </h4>
 <ul>
 <li> Value type is <a href="https://www.elastic.co/guide/en/logstash/current/configuration-file-structure.html#boolean">boolean</a></li>
-<li> Default false </li>
+<li> Default false</li>
 </ul>
 <p>
-Will send a token event down the event pipeline, corresponding to each request/response cycle. This is often used as a stream punctuator with IBM Predictive Insights, to indicate to downstream plugins (e.g. scacsv) that a set of input data can be treated atomically and processed.
+Indicates whether the previous state (timestamp) should be preserved. True will cause the state file (at last_run_metadata_path) to be delete
 </p>
+
+
+
 
 </div>
 <!--closes main container div-->
