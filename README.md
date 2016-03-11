@@ -23,6 +23,9 @@ wilywebsvcs {
   <a href="#end_time">end_time</a> => ... # string (optional), default: none
   <a href="#latency">latency</a> => ... # number (optional), default: 0 minutes
   <a href="#aggregation_interval">aggregation_interval</a> => ... # number (optional), default: 15 minutes
+  <a href="#last_run_metadata_path">last_run_metadata_path</a> => ... # file path (optional), default: $USER_HOME/.logstash_jdbc_last_run
+  <a href="#record_last_run">record_last_run</a> => ... # boolean, default: true
+  <a href="#clean_run">clean_run</a> => ... # boolean, default: false
   }
 }
 </code></pre>
@@ -156,6 +159,7 @@ last_run_metadata_path (optional setting)
 Path to file where last data time extracted is recorded. The timestamp in this file enables continuation at the appropriate data time following a restart of the plugin/Logstash
 </p>
 
+<h4>
 <a name="record_last_run">
 record_last_run (optional setting)
 </a>
