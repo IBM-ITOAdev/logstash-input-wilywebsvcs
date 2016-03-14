@@ -24,8 +24,8 @@ wilywebsvcs {
   <a href="#latency">latency</a> => ... # number (optional), default: 0 minutes
   <a href="#aggregation_interval">aggregation_interval</a> => ... # number (optional), default: 15 minutes
   <a href="#last_run_metadata_path">last_run_metadata_path</a> => ... # file path (optional), default: $USER_HOME/.logstash_jdbc_last_run
-  <a href="#record_last_run">record_last_run</a> => ... # boolean, default: true
-  <a href="#clean_run">clean_run</a> => ... # boolean, default: false
+  <a href="#record_last_run">record_last_run</a> => ... # boolean (optional), default: true
+  <a href="#clean_run">clean_run</a> => ... # boolean (optional), default: false
   }
 }
 </code></pre>
